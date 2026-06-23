@@ -50,7 +50,7 @@ def make_subplot(
 
     return plotting.Subplot(
         *nds.plot(
-            cp=plotting.ColourPicker(len(alpha_list), cyclic=False),
+            cp=plotting.ColourPicker.cool(len(alpha_list)),
             alpha_fill=0,
             alpha_scat=0,
         ),
@@ -68,7 +68,7 @@ def make_optimal_lr_plot():
     beta_list   = util.log_range(1e-3, 1, 100)
     D_list      = [1, 3, 10, 30, 100, 300, 1000]
 
-    cp = plotting.ColourPicker(len(D_list), cyclic=False)
+    cp = plotting.ColourPicker.cool(len(D_list))
 
     best_alpha = [
         plotting.Line(

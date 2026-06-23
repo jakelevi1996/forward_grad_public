@@ -8,13 +8,13 @@ This package can be installed locally in "editable mode" with the following comm
 
 ```
 python -m pip install -U pip
-python -m pip install -U jutility==0.0.29
+python -m pip install -U jutility==0.0.30
 git clone https://github.com/jakelevi1996/forward_grad_public.git
 cd forward_grad_public
 python -m pip install -e .
 ```
 
-This package has `torch` as a dependency, and has been tested with version `2.1.2+cpu`. Installation instructions for `torch` vary depending on available hardware, see [official installation instructions](https://pytorch.org/get-started/locally/).
+This package has `torch` and `torchvision` as dependencies, and has been tested with versions `2.1.2+cpu` and `0.16.2+cpu` respsectively. Installation instructions for `torch` and `torchvision` vary depending on available hardware, see [official installation instructions](https://pytorch.org/get-started/locally/).
 
 ## Create figures
 
@@ -30,4 +30,6 @@ python scripts/cv.py
 python scripts/fg_sg.py
 
 python scripts/bfg.py
+
+python scripts/sweep_mlp.py
 ```

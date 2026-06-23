@@ -85,13 +85,13 @@ def main():
             ns_stl.update(name_dense, alpha, y)
             table.update(alpha=alpha, repeat=i, name=name_dense, y=y)
 
-    cp = plotting.ColourPicker(len(ns_stl), cmap_name="gist_rainbow")
+    cp = plotting.ColourPicker.contrast()
     stl_lines = ns_stl.plot(cp=cp)
 
     mp = plotting.MultiPlot(
         plotting.Subplot(
             *ns_bs.plot(
-                cp=plotting.ColourPicker(len(beta_list), cyclic=False),
+                cp=plotting.ColourPicker.cool(len(beta_list)),
                 alpha_fill=0,
                 alpha_scat=0,
             ),
@@ -111,7 +111,7 @@ def main():
         ),
         plotting.Subplot(
             *ns_bs.transpose().plot(
-                cp=plotting.ColourPicker(len(alpha_list), cyclic=False),
+                cp=plotting.ColourPicker.cool(len(alpha_list)),
                 alpha_fill=0,
                 alpha_scat=0,
             ),

@@ -10,14 +10,13 @@ from forward_grad_public.learner import (
 def main():
 
     d0 = torch.tensor([1, 2, 5, 10, 20, 50])
-    cp = plotting.ColourPicker(2)
+    cp = plotting.ColourPicker.contrast()
     mp = plotting.MultiPlot(
         make_subplot(0.1,   100,    d0,     100,    cp),
         make_subplot(0.01,  1000,   10*d0,  5,      cp),
         make_subplot(0.001, 10000,  100*d0, 5,      cp),
         legend=plotting.FigureLegend(
-            plotting.Line(c=cp(0), label="BP"),
-            plotting.Line(c=cp(1), label="FG"),
+            *cp.get_legend_sweeps("BP", "FG", alpha_fill=0),
             plotting.Line(c="k", label="Theory",    ls=":"),
             plotting.Line(c="k", label="$y_0$",     ls="--"),
             num_rows=None,

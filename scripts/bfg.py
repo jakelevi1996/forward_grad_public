@@ -1,3 +1,4 @@
+import math
 import torch
 from jutility import plotting, util, cli
 from forward_grad_public.objective import Quadratic
@@ -20,6 +21,7 @@ def main():
         make_subplot(0.1, 500),
         legend=plotting.FigureLegend(
             *nds.plot(),
+            plotting.Line(c="k", ls=":", label="Theory"),
             loc="outside center right",
             num_rows=None,
         ),
@@ -35,7 +37,9 @@ def make_subplot(
     beta:   float,
     steps:  int,
 ):
-    alpha_list = util.log_range(1e-3, 3e-1, 20)
+    lr_min = 1e-3
+    lr_max = 3e-1
+    alpha_list = util.log_range(lr_min, lr_max, 20)
     repeats = 5
     D = 100
 
@@ -76,8 +80,17 @@ def make_subplot(
             nds.update(name, alpha, y)
             table.update(learner=name, alpha=alpha, y=y)
 
+    y0 = 0.5
+    lr_list_theory = util.log_range(lr_min, lr_max, 100).tolist()
+    theory_lines = [
+        FgSg(D, beta).plot(y0, steps, lr_list_theory),
+        Fg(D, 1).plot(y0, steps, lr_list_theory),
+        Sg(beta).plot(y0, steps, lr_list_theory),
+    ]
+
     return plotting.Subplot(
         *nds.plot(),
+        *theory_lines,
         xlabel="$\\alpha$",
         ylabel="$y_T$",
         log_x=True,
@@ -96,6 +109,100 @@ def train_learner(
         learner.step(f)
 
     return learner.forward(f).item()
+
+class TheoryPlotter:
+    def convergence_rate(self, lr: float) -> float:
+        raise NotImplementedError()
+
+    def get_yt(self, y0: float, steps: int, lr: float) -> float:
+        log_yt = steps*math.log(self.convergence_rate(lr)) + math.log(y0)
+        yt = math.exp(min(log_yt, 100))
+        return yt
+
+    def plot(
+        self,
+        y0:         float,
+        steps:      int,
+        lr_list:    list[float],
+    ) -> plotting.Line:
+        return plotting.Line(
+            lr_list,
+            [self.get_yt(y0, steps, lr) for lr in lr_list],
+            c="k",
+            ls=":",
+            z=100,
+        )
+
+class FgSg(TheoryPlotter):
+    def __init__(self, d: int, m: float):
+        self.d = d
+        self.m = m
+
+    def convergence_rate(self, lr: float) -> float:
+        A_list = [
+            [
+                (
+                    ((1 - lr*self.m)**2)
+                    - 2*lr*(1 - self.m)*(1 - lr*self.m)
+                    + (lr**2)*((1 - self.m)**2)*(self.d + 2)
+                ),
+                -2*(lr**2)*((1 - self.m)**2)*(self.d + 1),
+                (lr**2)*((1 - self.m)**2)*(self.d + 1),
+            ],
+            [
+                self.m*(1 - lr),
+                (1 - lr)*(1 - self.m),
+                0,
+            ],
+            [
+                self.m**2,
+                2*self.m*(1 - self.m),
+                (1 - self.m)**2,
+            ],
+        ]
+
+        A = torch.tensor(A_list)
+        e = torch.linalg.eigvals(A)
+        c = torch.abs(e).max().item()
+
+        return c
+
+class Fg(TheoryPlotter):
+    def __init__(self, d: int, s: int):
+        self.d = d
+        self.s = s
+
+    def convergence_rate(self, lr: float) -> float:
+        return ((1 - lr)**2) + (lr**2)*(self.d + 1)/self.s
+
+class Sg(TheoryPlotter):
+    def __init__(self, m: float):
+        self.m = m
+
+    def convergence_rate(self, lr: float) -> float:
+        A_list = [
+            [
+                (1 - lr*self.m)**2,
+                -2*lr*(1 - self.m)*(1 - lr*self.m),
+                (lr**2)*((1 - self.m)**2),
+            ],
+            [
+                self.m*(1 - lr*self.m),
+                (1 - self.m)*(1 - 2*lr*self.m),
+                -lr*((1 - self.m)**2),
+            ],
+            [
+                self.m**2,
+                2*self.m*(1 - self.m),
+                (1 - self.m)**2,
+            ],
+        ]
+
+        A = torch.tensor(A_list)
+        e = torch.linalg.eigvals(A)
+        c = torch.abs(e).max().item()
+
+        return c
 
 if __name__ == "__main__":
     with util.Timer("main"):

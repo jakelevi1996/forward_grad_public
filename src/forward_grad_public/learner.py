@@ -49,6 +49,23 @@ class ForwardGrad(Learner):
         fg = d * v
         return fg, d, v
 
+class ForwardGradMomentum(ForwardGrad):
+    def __init__(
+        self,
+        d:  int,
+        lr: float,
+        m:  float,
+    ):
+        self.init_x(d)
+        self.r  = torch.zeros_like(self.x)
+        self.lr = lr
+        self.m  = m
+
+    def step(self, f: Objective):
+        fg, _, _ = self.get_forward_grad(f)
+        self.r = (1 - self.m) * self.r + (self.m) * fg
+        self.x -= self.lr * self.r
+
 class ForwardGradAdam(ForwardGrad):
     def __init__(
         self,
